@@ -1,0 +1,22 @@
+explain analyze
+select * from bookings 
+where b_date >= '2026-05-01 00:00:00' and status = 'cancelled';
+
+Seq Scan on bookings  (cost=0.00..11425.00 rows=3512 width=54) (actual time=0.022..48.512 rows=3490 loops=1)
+  Filter: ((b_date >= '2026-05-01 00:00:00'::timestamp) AND ((status)::text = 'cancelled'::text))
+  Rows Removed by Filter: 506510
+Planning Time: 0.142 ms
+Execution Time: 48.910 ms
+
+create index bookings_date_status_idx on bookings (b_date, status);
+
+explain analyze
+select * from bookings 
+where b_date >= '2026-05-01 00:00:00' and status = 'cancelled';
+
+Bitmap Heap Scan on bookings  (cost=95.12..3412.45 rows=3512 width=54) (actual time=0.412..2.110 rows=3490 loops=1)
+  Recheck Cond: ((b_date >= '2026-05-01 00:00:00'::timestamp) AND ((status)::text = 'cancelled'::text))
+  ->  Bitmap Index Scan on bookings_date_status_idx  (cost=0.00..94.15 rows=3512 width=0) (actual time=0.250..0.250 rows=3490 loops=1)
+        Index Cond: ((b_date >= '2026-05-01 00:00:00'::timestamp) AND ((status)::text = 'cancelled'::text))
+Planning Time: 0.151 ms
+Execution Time: 2.312 ms
